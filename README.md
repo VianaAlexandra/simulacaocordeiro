@@ -1,0 +1,1 @@
+Simulação estupidamente básica pra uma atividade de disciplina. 
