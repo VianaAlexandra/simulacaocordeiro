@@ -1,0 +1,300 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+<br>
+
+Universidade Estadual do Sudoeste da Bahia
+----
+PPG em Zootecnia - Produção de Ruminantes
+----
+
+### Disciplina Estatística Aplicada - Dr. Paulo Bonomo
+### Discente: Paulo Barros de Abreu Junior (pbarrosbio@gmail.com)
+### Data: 23/08/2020
+
+<hr>
+
+<br>
+
+Descrição da Atividade
+----------------------------
+
+Teixeira *et al.* (2005) avaliaram o efeito de sexo, raça e peso vivo sobre características de qualidade de carne de cordeiro. Para esta atividade, foram selecionadas com base no artigo duas variáveis independentes (Sexo e Raça) e quatro variáveis dependentes (Dureza, Suculência e Intensidade de Sabor e Fibrosidade) buscando replicar algumas das análises de variância encontradas no artigo.
+
+<br>
+<br>
+
+Simulação das unidades experimentais
+-------------------------------------
+
+No trabalho original não houve efeito significativo de "Sexo". Abaixo seguem as médias e desvios obtidos do artigo para o fator significativo "Raça": 
+
+```{r message=FALSE, echo=FALSE}
+library(tidyverse)
+library(kableExtra)
+
+medias <- tibble(
+    `Raça ` = c("Bragançana", "Mirandesa"),
+    `Dureza` = c("4.1 ± 0.23", "2.8 ± 0.23"),
+    `Suculência` = c("3.4 ± 0.20","3.4 ± 0.19"),
+    `Intensidade Sabor` = c("4.5 ± 0.12","4.2 ± 0.12"),
+    `Fibrosidade` = c("3.6 ± 0.19","2.6 ± 0.18")
+)
+
+medias %>% kable() %>% kable_styling()
+```
+
+Com base nestes valores, simulei unidades experimentais que se aproximem das reais utilizadas no artigo, pra subsequentemente realizar uma análise de variância para avaliar o efeito dos fatores sobre as características selecionadas.
+<br><br>
+
+#### Desenho experimental
+
+O desenho experimental original consistia em um desenho balanceado de blocos incompletos com esquema fatorial 2x3x2, com 72 unidades experimentais. O desenho experimental proposto para essa atividade será um desenho inteiramente casualizado (DIC) com esquema fatorial 2x2, dois sexos e duas raças, com 18 repetições por tratamento totalizando 72 unidades experimentais.
+
+<br>
+<br>
+
+
+```{r message=FALSE, echo= FALSE}
+library(truncnorm)
+
+# criando vetor de racas
+racas <- rep(c("Bragancana","Mirandesa"), each=36)
+
+# criando vetor de sexo
+sexo <- rep(c("F","M"), each=9, times =2)
+
+# gerando vetores para cada caracteristica
+# valores gerados a partir de uma distribuição normal com média e desvio segundo o artigo
+# tambem considerei os valores de maximos e minimos trazidos no artigo para definir os limites
+# inferior e superior da distribuicao gerada
+
+
+# RACA BRAGANCANA
+dureza.Bragancana <- rtruncnorm(n=36, a=0.7, b=7.1, mean=4.1, sd=0.23)
+
+suculencia.Bragancana <- rtruncnorm(n=36, a=1.4, b=6.3, mean=3.4, sd=0.20)
+
+sabor.Bragancana <- rtruncnorm(n=36, a=2.4, b=6.7, mean=4.5, sd=0.12)
+
+fibrosidade.Bragancana <- rtruncnorm(n=36, a=0.6, b=5.8, mean=3.6, sd=0.19)
+
+# RACA MIRANDESA
+dureza.Mirandesa <- rtruncnorm(n=36, a=0.7, b=7.1, mean=2.8, sd=0.23)
+
+suculencia.Mirandesa <- rtruncnorm(n=36, a=1.4, b=6.3, mean=3.4, sd=0.19)
+
+sabor.Mirandesa <- rtruncnorm(n=36, a=2.4, b=6.7, mean=4.2, sd=0.12)
+
+fibrosidade.Mirandesa <- rtruncnorm(n=36, a=0.6, b=5.8, mean=2.6, sd=0.18)
+
+
+# Amostrando aleatoriamente as distribuicoes geradas para criacao do dataset
+
+dureza <- c(sample(dureza.Bragancana, 36, replace = F),sample(dureza.Mirandesa, 36, replace = F))
+suculencia <- c(sample(suculencia.Bragancana, 36, replace = F),sample(suculencia.Mirandesa, 36, replace = F))
+sabor <- c(sample(sabor.Bragancana, 36, replace = F),sample(sabor.Mirandesa, 36, replace = F))
+fibrosidade <- c(sample(fibrosidade.Bragancana, 36, replace = F),sample(fibrosidade.Mirandesa, 36, replace = F))
+
+# Criando o banco de dados final
+
+carne_ovinos <- data.frame(racas,sexo,dureza,suculencia,sabor,fibrosidade, stringsAsFactors = T)
+
+
+```
+<br>
+
+
+#### Banco de Dados população simulada (primeiros 6 registros)
+
+```{r message=FALSE, echo=FALSE}
+head(carne_ovinos) %>% kable() %>% kable_styling()
+```
+
+<br>
+<br>
+
+Anova DIC Esquema Fatorial 2x2 Fatores: Raça, Sexo
+---------------------------------------------------
+
+<br>
+
+O modelo estatístico adotado para o cálcudo da Anova é $$ \large Y_{ijk} = \mu + Raça_{i} + Sexo_{j} + (Sexo:Raça)_{ij} + \varepsilon_{ijk} $$
+
+
+
+```{r include=FALSE,echo = FALSE, fig.show="hide"}
+
+library(easyanova)
+
+aov.res <- ea2(carne_ovinos, design = 1, list = TRUE)
+
+
+```
+
+
+
+```{r echo=FALSE, include=FALSE}
+#Código para execução da ANOVA:
+cat("ea2(carne_ovinos, design = 1, list = TRUE")
+
+```
+
+<br>
+
+Quadros das ANOVAS
+------
+
+<br>
+
+#### Variável: **DUREZA**
+
+<hr>
+```{r echo=FALSE, message=FALSE}
+
+#resultadoAnova$dureza$`Analysis of variance` %>% kable() %>% kable_styling()
+
+aov.dureza <- tibble(
+                    `Fonte de variação` = c("Raça","Sexo","Interação","Resíduo","Total"),
+                    "GL" = c(aov.res$dureza$`Analysis of variance`$df,sum(aov.res$dureza$`Analysis of variance`$df)),
+                    "SQ" = c(aov.res$dureza$`Analysis of variance`$`type III SS`,sum(aov.res$dureza$`Analysis of variance`$`type III SS`)),
+                    "QM" = c(aov.res$dureza$`Analysis of variance`$`mean square`,"-"),
+                    "F" = c(aov.res$dureza$`Analysis of variance`$`F value`,"-"),
+                    "p-value" = c(aov.res$dureza$`Analysis of variance`$`p>F`,"-")
+            )
+
+aov.dureza %>% kable() %>% kable_styling() %>% row_spec(row = 4, hline_after = T) %>% row_spec(row = 5,background = "#f0f0f5", bold=T, hline_after = T)
+
+```
+
+<br>
+
+
+#### Variável: **SUCULENCIA**
+
+<hr>
+
+```{r echo=FALSE, message=FALSE}
+
+#resultadoAnova$dureza$`Analysis of variance` %>% kable() %>% kable_styling()
+
+aov.suculencia <- tibble(
+                    `Fonte de variação` = c("Raça","Sexo","Interação","Resíduo","Total"),
+                    "GL" = c(aov.res$suculencia$`Analysis of variance`$df,sum(aov.res$suculencia$`Analysis of variance`$df)),
+                    "SQ" = c(aov.res$suculencia$`Analysis of variance`$`type III SS`,sum(aov.res$suculencia$`Analysis of variance`$`type III SS`)),
+                    "QM" = c(aov.res$suculencia$`Analysis of variance`$`mean square`,"-"),
+                    "F" = c(aov.res$suculencia$`Analysis of variance`$`F value`,"-"),
+                    "p-value" = c(aov.res$suculencia$`Analysis of variance`$`p>F`,"-")
+            )
+
+aov.suculencia %>% kable() %>% kable_styling() %>% row_spec(row = 4, hline_after = T) %>% row_spec(row = 5,background = "#f0f0f5", bold=T, hline_after = T)
+
+
+```
+
+<br>
+
+#### Variável: **SABOR**
+
+<hr>
+
+```{r echo=FALSE, message=FALSE}
+
+#resultadoAnova$dureza$`Analysis of variance` %>% kable() %>% kable_styling()
+
+aov.sabor <- tibble(
+                    `Fonte de variação` = c("Raça","Sexo","Interação","Resíduo","Total"),
+                    "GL" = c(aov.res$sabor$`Analysis of variance`$df,sum(aov.res$sabor$`Analysis of variance`$df)),
+                    "SQ" = c(aov.res$sabor$`Analysis of variance`$`type III SS`,sum(aov.res$sabor$`Analysis of variance`$`type III SS`)),
+                    "QM" = c(aov.res$sabor$`Analysis of variance`$`mean square`,"-"),
+                    "F" = c(aov.res$sabor$`Analysis of variance`$`F value`,"-"),
+                    "p-value" = c(aov.res$sabor$`Analysis of variance`$`p>F`,"-")
+            )
+
+aov.sabor %>% kable() %>% kable_styling() %>% row_spec(row = 4, hline_after = T) %>% row_spec(row = 5,background = "#f0f0f5", bold=T, hline_after = T)
+
+
+```
+
+<br>
+
+#### Variável: **FIBROSIDADE**
+
+<hr>
+
+```{r echo=FALSE, message=FALSE}
+
+#resultadoAnova$dureza$`Analysis of variance` %>% kable() %>% kable_styling()
+
+aov.fibrosidade <- tibble(
+                    `Fonte de variação` = c("Raça","Sexo","Interação","Resíduo","Total"),
+                    "GL" = c(aov.res$fibrosidade$`Analysis of variance`$df,sum(aov.res$fibrosidade$`Analysis of variance`$df)),
+                    "SQ" = c(aov.res$fibrosidade$`Analysis of variance`$`type III SS`,sum(aov.res$fibrosidade$`Analysis of variance`$`type III SS`)),
+                    "QM" = c(aov.res$fibrosidade$`Analysis of variance`$`mean square`,"-"),
+                    "F" = c(aov.res$fibrosidade$`Analysis of variance`$`F value`,"-"),
+                    "p-value" = c(aov.res$fibrosidade$`Analysis of variance`$`p>F`,"-")
+            )
+
+aov.fibrosidade %>% kable() %>% kable_styling() %>% row_spec(row = 4, hline_after = T) %>% row_spec(row = 5,background = "#f0f0f5", bold=T, hline_after = T)
+
+
+```
+
+<br>
+<br>
+
+Tabela final ANOVA
+-------------------
+
+```{r echo = FALSE}
+    
+    medias_raca <- carne_ovinos[,-2] %>% group_by(racas) %>% summarise_all(list(mean = mean,sd = sd))
+    medias_raca[,-1]<-round(medias_raca[,-1],2)
+    medias_sexo <- carne_ovinos[,-1] %>% group_by(sexo) %>% summarise_all(list(mean = mean,sd = sd))
+    medias_sexo[,-1]<-round(medias_sexo[,-1],2)
+
+    tab_final <- tibble(
+                    #1    
+                    ` ` = c("***Raça***", "Bragançana", "Mirandesa", " ", "***Sexo***", "Fêmeas","Machos", " ", "***Efeitos***", "Raça","Sexo", " ", "***Interações***","Raça x Sexo"," " ),
+                    #2
+                    "Dureza" = c(" ", paste(medias_raca$dureza_mean[1]," ± ",medias_raca$dureza_sd[1],"^a^", sep =" "),
+                                 paste(medias_raca$dureza_mean[2]," ± ",medias_raca$dureza_sd[2],"^b^",sep =" "), " ", 
+                                 " " ,paste(medias_sexo$dureza_mean[1],"±",medias_sexo$dureza_sd[1],"^a^",sep =" "),
+                                 paste(medias_sexo$dureza_mean[2],"±",medias_sexo$dureza_sd[2],"^a^",sep =" "), " ",
+                                 " ", "***","NS"," ", " ","NS"," "),
+                    #3
+                    "Suculência" = c(" ", paste(medias_raca$suculencia_mean[1]," ± ",medias_raca$suculencia_sd[1],"^a^",sep =" "),
+                                 paste(medias_raca$suculencia_mean[2]," ± ",medias_raca$suculencia_sd[2],"^a^",sep =" "), " ", 
+                                 " " ,paste(medias_sexo$suculencia_mean[1],"±",medias_sexo$suculencia_sd[1],"^a^",sep =" "),
+                                 paste(medias_sexo$suculencia_mean[2]," ± ",medias_sexo$suculencia_sd[2],"^a^",sep =" "), " ",
+                                 " ", "NS","NS"," ", " ","NS"," "),
+                    #4
+                    "Sabor" = c(" ", paste(medias_raca$sabor_mean[1]," ± ",medias_raca$sabor_sd[1],"^a^",sep =" "),
+                                 paste(medias_raca$sabor_mean[2]," ± ",medias_raca$sabor_sd[2],"^b^",sep =" "), " ", 
+                                 " " ,paste(medias_sexo$sabor_mean[1]," ± ",medias_sexo$sabor_sd[1],"^a^",sep =" "),
+                                 paste(medias_sexo$sabor_mean[2]," ± ",medias_sexo$sabor_sd[2],"^a^",sep =" "), " ",
+                                 " ", "***","NS"," ", " ","NS"," "),
+                    #5
+                    "Fibrosidade" = c(" ", paste(medias_raca$fibrosidade_mean[1]," ± ",medias_raca$fibrosidade_sd[1],"^a^",sep =" "),
+                                 paste(medias_raca$fibrosidade_mean[2]," ± ",medias_raca$fibrosidade_sd[2],"^b^",sep =" "), " ", 
+                                 " " ,paste(medias_sexo$fibrosidade_mean[1]," ± ",medias_sexo$fibrosidade_sd[1],"^a^",sep =" "),
+                                 paste(medias_sexo$fibrosidade_mean[2]," ± ",medias_sexo$fibrosidade_sd[2],"^a^",sep =" "), " ",
+                                 " ", "***","NS"," ", " ","NS"," ")
+                   
+    )
+    
+    tab_final %>% kable() %>% kable_styling() %>% 
+        footnote(general= "*** P $\\leq$ 0.01; NS: Não significante; Valores seguidos das mesmas letras não diferem estatisticamente (Tukey, P > 0.05).", 
+                 footnote_as_chunk = T, general_title = "Nota:")
+```
+<br>
+<br>
+
+Discussão dos Resultados
+-------------------------
+
+Uma vez que a interação entre Raça x Sexo não foi signficativa não existe efeito entre os níveis destes fatores na qualidade da carne de cordeiros avaliada neste experimento. O fator Sexo também não apresentou efeito significativo, não havendo portanto diferença na qualidade da carne entre machos e fêmeas. Entretanto quando avaliamos o efeito significativo de Raça sobre as características dureza, intensidade do sabor e fibrosidade, os animais da raça Mirandesa apresentam as menores médias, possuindo portanto carne mais tenra, com sabor mais palatável e menos fibrosa, características que são importantes na aceitação do consumidor aos cortes de cordeiro, impactando diretamente a palatabilidade da carne. Nestas condições experimentais, a raça Mirandesa seria a mais indicada ao criador que procura uma carne com maior potencial de rentabilidade e apelo comercial.
